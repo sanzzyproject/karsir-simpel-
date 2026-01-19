@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .models import TransactionRequest, TransactionResponse
 from datetime import datetime
-import random
 
 app = FastAPI()
 
@@ -14,24 +13,16 @@ app.add_middleware(
 )
 
 MENU_DATA = [
-    {"name": "Es Teh", "price": 3000, "category": "drink"},
-    {"name": "Kopi Hitam", "price": 4000, "category": "drink"},
-    {"name": "Nasi Goreng", "price": 12000, "category": "food"},
-    {"name": "Mie Rebus", "price": 10000, "category": "food"},
-    {"name": "Gorengan", "price": 1000, "category": "snack"}
+    {"id": 1, "name": "Es Teh", "price": 3000, "emoji": "🥤"},
+    {"id": 2, "name": "Kopi Hitam", "price": 4000, "emoji": "☕"},
+    {"id": 3, "name": "Nasi Goreng", "price": 12000, "emoji": "🍛"},
+    {"id": 4, "name": "Mie Rebus", "price": 10000, "emoji": "🍜"},
+    {"id": 5, "name": "Gorengan", "price": 1000, "emoji": "🥟"}
 ]
 
 @app.get("/api/menu")
 async def get_menu():
     return MENU_DATA
-
-# Endpoint baru untuk data grafik dummy
-@app.get("/api/chart-data")
-async def get_chart_data():
-    # Mensimulasikan data penjualan per jam
-    data = [random.randint(50000, 200000) for _ in range(7)]
-    labels = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "Now"]
-    return {"labels": labels, "data": data}
 
 @app.post("/api/transaction", response_model=TransactionResponse)
 async def create_transaction(data: TransactionRequest):
