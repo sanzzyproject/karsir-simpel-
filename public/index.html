@@ -5,153 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KasirSimpel Dark</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <div class="mobile-container">
-        <header class="app-header">
-            <div class="user-profile">
-                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="User" class="avatar">
-                <div class="user-info">
-                    <span class="greeting">Selamat Pagi!</span>
-                    <h3 class="username">Admin Kasir</h3>
+    <div class="mobile-frame">
+        <header class="top-header">
+            <div class="user-info">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100" alt="Cashier" class="avatar">
+                <div class="greeting">
+                    <p>Selamat Bertugas,</p>
+                    <h3>Kasir Shift 1</h3>
                 </div>
             </div>
             <div class="header-actions">
-                <button class="icon-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
-                <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+                <button class="icon-btn">🔔</button>
             </div>
         </header>
 
         <section class="balance-card">
-            <div class="balance-label">Total Transaksi</div>
-            <h1 id="display-total" class="balance-amount">Rp 0</h1>
-            <div class="balance-growth">
-                <span class="badge-success">Online <i class="fa-solid fa-wifi"></i></span>
-            </div>
-            
-            <div class="card-actions">
-                <button class="action-btn active" onclick="switchTab('menu')">
-                    <i class="fa-solid fa-utensils"></i> Menu
-                </button>
-                <button class="action-btn secondary" onclick="switchTab('manual')">
-                    <i class="fa-solid fa-calculator"></i> Manual
-                </button>
+            <div class="card-content">
+                <p>Total Tagihan</p>
+                <h1 id="display-total">Rp 0</h1>
+                <div class="card-footer">
+                    <span class="badge" id="status-badge">ONLINE</span>
+                    <span class="card-brand">VISA STYLE</span>
+                </div>
             </div>
         </section>
 
+        <div class="nav-segment">
+            <button class="seg-btn active" onclick="switchTab('manual')">
+                <span>🔢</span> Manual
+            </button>
+            <button class="seg-btn" onclick="switchTab('menu')">
+                <span>🍔</span> Menu
+            </button>
+        </div>
+
         <main class="content-area">
             
-            <div id="tab-menu" class="tab-content">
-                <div class="section-title">
-                    <h3>Daftar Menu</h3>
-                    <a href="#" onclick="cartScroll()">Lihat Cart</a>
+            <div id="tab-manual" class="tab-pane">
+                <div class="input-display-wrapper">
+                    <span class="curr-label">Input Nominal</span>
+                    <div id="manual-input-view" class="big-input">0</div>
                 </div>
+                
+                <div class="numpad-grid">
+                    <button onclick="pressKey('1')">1</button>
+                    <button onclick="pressKey('2')">2</button>
+                    <button onclick="pressKey('3')">3</button>
+                    <button onclick="pressKey('4')">4</button>
+                    <button onclick="pressKey('5')">5</button>
+                    <button onclick="pressKey('6')">6</button>
+                    <button onclick="pressKey('7')">7</button>
+                    <button onclick="pressKey('8')">8</button>
+                    <button onclick="pressKey('9')">9</button>
+                    <button onclick="pressKey('000')" class="secondary-key">.000</button>
+                    <button onclick="pressKey('0')">0</button>
+                    <button onclick="pressKey('C')" class="delete-key">⌫</button>
+                </div>
+                <button class="btn-primary full-width mt-3" onclick="addManualItem()">+ Tambah ke Keranjang</button>
+            </div>
+
+            <div id="tab-menu" class="tab-pane hidden">
                 <div class="menu-grid" id="menu-container">
                     </div>
             </div>
 
-            <div id="tab-manual" class="tab-content hidden">
-                <div class="manual-display-wrapper">
-                    <span class="currency">Rp</span>
-                    <span id="manual-input-view">0</span>
-                </div>
-                <div class="numpad-grid">
-                    <button onclick="pressKey('7')">7</button><button onclick="pressKey('8')">8</button><button onclick="pressKey('9')">9</button>
-                    <button onclick="pressKey('4')">4</button><button onclick="pressKey('5')">5</button><button onclick="pressKey('6')">6</button>
-                    <button onclick="pressKey('1')">1</button><button onclick="pressKey('2')">2</button><button onclick="pressKey('3')">3</button>
-                    <button onclick="pressKey('000')">000</button><button onclick="pressKey('0')">0</button><button class="btn-clear" onclick="pressKey('C')"><i class="fa-solid fa-delete-left"></i></button>
-                </div>
-                <button class="btn-add-manual" onclick="addManualItem()">Tambahkan ke Cart</button>
-            </div>
-
             <div class="cart-section">
                 <div class="section-title">
-                    <h3>Keranjang</h3>
+                    <h4>Keranjang Belanja</h4>
                     <span id="cart-count">0 Item</span>
                 </div>
                 <div id="cart-items" class="transaction-list">
                     <div class="empty-state">
-                        <i class="fa-solid fa-basket-shopping"></i>
-                        <p>Keranjang kosong</p>
+                        <p>Belum ada item</p>
                     </div>
                 </div>
             </div>
         </main>
 
-        <div class="bottom-nav">
-            <button class="btn-checkout" onclick="openPaymentModal()">
-                <span>Bayar Sekarang</span>
-                <span id="footer-total">Rp 0</span>
+        <footer class="bottom-bar">
+            <div class="total-preview">
+                <small>Total Bayar</small>
+                <h3 id="footer-total">Rp 0</h3>
+            </div>
+            <button class="btn-checkout" onclick="openModal()">
+                Bayar Sekarang ➔
             </button>
-        </div>
+        </footer>
     </div>
 
     <div id="payment-modal" class="modal-overlay">
         <div class="modal-sheet">
-            <div class="modal-handle"></div>
-            <h3>Pembayaran</h3>
-            <div class="input-group">
-                <label>Total Tagihan</label>
-                <div class="input-box display-only" id="modal-total-tagihan">Rp 0</div>
+            <div class="modal-header">
+                <h3>Pembayaran</h3>
+                <button onclick="closeModal()" class="close-btn">✕</button>
             </div>
             
-            <div class="input-group">
-                <label>Uang Diterima</label>
-                <input type="number" id="input-uang" placeholder="Masukan nominal..." inputmode="numeric">
+            <div class="bill-amount">
+                <p>Total yang harus dibayar</p>
+                <h2 id="modal-total-tagihan">Rp 0</h2>
             </div>
 
-            <div class="quick-cash-row">
-                <button onclick="setUang('pas')">Pas</button>
+            <div class="payment-input-group">
+                <label>Uang Diterima</label>
+                <input type="number" id="input-uang" placeholder="0" class="dark-input">
+            </div>
+
+            <div class="quick-amounts">
+                <button onclick="setUang('pas')">Uang Pas</button>
+                <button onclick="setUang(10000)">10k</button>
                 <button onclick="setUang(20000)">20k</button>
                 <button onclick="setUang(50000)">50k</button>
                 <button onclick="setUang(100000)">100k</button>
             </div>
 
-            <div class="kembalian-info">
-                <span>Kembalian</span>
-                <span id="text-kembalian" class="accent-text">Rp 0</span>
+            <div class="change-display">
+                <span>Kembalian:</span>
+                <span id="text-kembalian" class="highlight-green">Rp 0</span>
             </div>
 
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal()">Batal</button>
-                <button class="btn-confirm" onclick="prosesTransaksi()">Proses</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="success-overlay" class="success-screen hidden">
-        <div class="success-content">
-            <div class="success-icon">
-                <i class="fa-solid fa-check"></i>
-            </div>
-            <h2>Transaksi Berhasil!</h2>
-            <p>Pembayaran telah diterima sistem.</p>
-            
-            <div class="success-amount" id="success-amount">Rp 0</div>
-
-            <div class="receipt-details">
-                <div class="row">
-                    <span>Tunai</span>
-                    <span id="receipt-paid">Rp 0</span>
-                </div>
-                <div class="row">
-                    <span>Kembalian</span>
-                    <span id="receipt-change">Rp 0</span>
-                </div>
-                <div class="divider"></div>
-                <div class="row total">
-                    <span>Total</span>
-                    <span id="receipt-total">Rp 0</span>
-                </div>
-            </div>
-
-            <div class="success-actions">
-                <button class="btn-print"><i class="fa-solid fa-print"></i> Cetak Struk</button>
-                <button class="btn-home" onclick="resetApp()">Kembali ke Menu</button>
-            </div>
+            <button class="btn-primary full-width mt-4" onclick="prosesTransaksi()">
+                PROSES TRANSAKSI
+            </button>
         </div>
     </div>
 
