@@ -13,11 +13,11 @@ app.add_middleware(
 )
 
 MENU_DATA = [
-    {"id": 1, "name": "Es Teh", "price": 3000, "emoji": "🥤"},
-    {"id": 2, "name": "Kopi Hitam", "price": 4000, "emoji": "☕"},
-    {"id": 3, "name": "Nasi Goreng", "price": 12000, "emoji": "🍛"},
-    {"id": 4, "name": "Mie Rebus", "price": 10000, "emoji": "🍜"},
-    {"id": 5, "name": "Gorengan", "price": 1000, "emoji": "🥟"}
+    {"name": "Es Teh", "price": 3000},
+    {"name": "Kopi Hitam", "price": 4000},
+    {"name": "Nasi Goreng", "price": 12000},
+    {"name": "Mie Rebus", "price": 10000},
+    {"name": "Gorengan", "price": 1000}
 ]
 
 @app.get("/api/menu")
