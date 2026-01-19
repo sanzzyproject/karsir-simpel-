@@ -1,27 +1,78 @@
 let cart = [];
 let manualBuffer = "0";
+let salesChart;
 const API_URL = "/api";
 
-const menuItems = [
-    { id: 1, name: "Es Teh", price: 3000 },
-    { id: 2, name: "Kopi Hitam", price: 4000 },
-    { id: 3, name: "Nasi Goreng", price: 12000 },
-    { id: 4, name: "Mie Rebus", price: 10000 },
-    { id: 5, name: "Gorengan", price: 1000 }
-];
+// --- 1. Init & Chart Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+    initChart();
+    fetchMenu();
+    // Simulate updating chart every 3 seconds for "Realtime" effect
+    setInterval(updateChartRandomly, 3000);
+});
 
-// Initialize Menu
-function initMenu() {
-    const container = document.getElementById('menu-container');
-    menuItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'menu-card';
-        div.onclick = () => addToCart(item.name, item.price);
-        div.innerHTML = `<strong>${item.name}</strong><div class="price">Rp ${item.price.toLocaleString('id-ID')}</div>`;
-        container.appendChild(div);
+async function initChart() {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    // Gradient styling for the chart
+    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    const initialData = await fetch(`${API_URL}/chart-data`).then(r => r.json());
+
+    salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: initialData.labels,
+            datasets: [{
+                label: 'Sales',
+                data: initialData.data,
+                borderColor: '#caffbf', // Mint color matching accent
+                backgroundColor: gradient,
+                borderWidth: 2,
+                pointBackgroundColor: '#fff',
+                pointRadius: 3,
+                tension: 0.4, // Smooth curves
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false }, // Minimalist look
+                y: { display: false }
+            }
+        }
     });
 }
 
+function updateChartRandomly() {
+    if(!salesChart) return;
+    // Remove first, add new random point
+    const newData = Math.floor(Math.random() * 150000) + 50000;
+    salesChart.data.datasets[0].data.shift();
+    salesChart.data.datasets[0].data.push(newData);
+    salesChart.update();
+}
+
+// --- 2. Menu Logic ---
+async function fetchMenu() {
+    const res = await fetch(`${API_URL}/menu`);
+    const data = await res.json();
+    const container = document.getElementById('menu-container');
+    
+    container.innerHTML = data.map(item => `
+        <div class="menu-item" onclick="addToCart('${item.name}', ${item.price})">
+            <h4>${item.name}</h4>
+            <div class="price">Rp ${item.price.toLocaleString('id-ID')}</div>
+        </div>
+    `).join('');
+}
+
+// --- 3. Cart Logic ---
 function addToCart(name, price) {
     const existing = cart.find(i => i.name === name);
     if (existing) {
@@ -32,10 +83,51 @@ function addToCart(name, price) {
     renderCart();
 }
 
+function renderCart() {
+    const list = document.getElementById('cart-items');
+    const badge = document.getElementById('cart-badge');
+    const displayTotal = document.getElementById('display-total');
+    
+    // Update Badge
+    const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+    badge.innerText = totalItems;
+
+    // Calc Total
+    let total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    displayTotal.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+
+    if (cart.length === 0) {
+        list.innerHTML = `<div class="empty-state" style="text-align:center; padding:20px; color:#555;"><p>Keranjang Kosong</p></div>`;
+        return;
+    }
+
+    list.innerHTML = cart.map((item, idx) => `
+        <div class="cart-item-card">
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name} <span style="color:#4ade80; font-size:12px">x${item.qty}</span></div>
+                <div class="cart-item-price">Total: Rp ${(item.price * item.qty).toLocaleString('id-ID')}</div>
+            </div>
+            <button class="btn-remove" onclick="removeItem(${idx})">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeItem(idx) {
+    cart.splice(idx, 1);
+    renderCart();
+}
+
+function clearCart() {
+    cart = [];
+    renderCart();
+}
+
+// --- 4. Manual Input Logic ---
 function pressKey(key) {
-    if (key === 'C') {
-        manualBuffer = "0";
-    } else {
+    if (key === 'C') manualBuffer = "0";
+    else {
         if (manualBuffer === "0") manualBuffer = key;
         else manualBuffer += key;
     }
@@ -45,52 +137,34 @@ function pressKey(key) {
 function addManualItem() {
     const val = parseInt(manualBuffer);
     if (val > 0) {
-        addToCart("Item Manual", val);
+        addToCart("Manual Item", val);
         manualBuffer = "0";
         document.getElementById('manual-input-view').innerText = "Rp 0";
+        switchTab('cart'); // Auto jump to cart
     }
 }
 
-function renderCart() {
-    const container = document.getElementById('cart-items');
-    const totalDisplay = document.getElementById('display-total');
-    const footerTotal = document.getElementById('footer-total');
+// --- 5. Navigation ---
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
     
-    if (cart.length === 0) {
-        container.innerHTML = '<p class="empty-msg">Belum ada item</p>';
-        totalDisplay.innerText = "Rp 0";
-        footerTotal.innerText = "Rp 0";
-        return;
-    }
-
-    let total = 0;
-    container.innerHTML = cart.map((item, idx) => {
-        total += (item.price * item.qty);
-        return `
-            <div class="cart-item">
-                <span>${item.qty}x ${item.name}</span>
-                <span>Rp ${(item.price * item.qty).toLocaleString('id-ID')} 
-                <button onclick="removeItem(${idx})" style="border:none; background:none; color:red; cursor:pointer">✕</button></span>
-            </div>
-        `;
-    }).join('');
-
-    totalDisplay.innerText = `Rp ${total.toLocaleString('id-ID')}`;
-    footerTotal.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+    // Update visual styles (Optional: add 'active' class to buttons)
 }
 
-function removeItem(idx) {
-    cart.splice(idx, 1);
-    renderCart();
-}
-
-// Modal Logic
+// --- 6. Payment Logic ---
 function openModal() {
     const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    if (total === 0) return alert("Keranjang kosong");
+    if (total === 0) return alert("Keranjang masih kosong!");
     
     document.getElementById('modal-total-tagihan').innerText = `Rp ${total.toLocaleString('id-ID')}`;
     document.getElementById('payment-modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('payment-modal').style.display = 'none';
+    document.getElementById('input-uang').value = '';
+    document.getElementById('text-kembalian').innerText = 'Rp 0';
 }
 
 function setUang(val) {
@@ -98,7 +172,6 @@ function setUang(val) {
     const input = document.getElementById('input-uang');
     if (val === 'pas') input.value = total;
     else input.value = val;
-    
     calculateChange();
 }
 
@@ -121,23 +194,19 @@ async function prosesTransaksi() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: cart, paid })
         });
+        
+        if (!res.ok) throw new Error("Gagal");
+        
         const data = await res.json();
-        alert(`Transaksi Berhasil! Kembalian: Rp ${data.change.toLocaleString('id-ID')}`);
+        alert(`SUKSES!\nKembalian: Rp ${data.change.toLocaleString('id-ID')}`);
+        
         cart = [];
         renderCart();
         closeModal();
+        switchTab('menu'); // Reset view
     } catch (e) {
-        alert("Gagal menghubungi server");
+        alert("Gagal memproses transaksi");
     }
 }
 
-function closeModal() { document.getElementById('payment-modal').style.display = 'none'; }
-function switchTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.remove('hidden');
-    event.currentTarget.classList.add('active');
-}
-
 document.getElementById('input-uang').addEventListener('input', calculateChange);
-initMenu();
