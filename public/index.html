@@ -5,115 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KasirSimpel Modern</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-    <div class="mobile-wrapper">
-        <header class="top-bar">
-            <div class="profile-info">
-                <div class="avatar">KS</div>
-                <div>
-                    <span class="greeting">Halo, Kasir! 👋</span>
-                    <span class="status">Online</span>
+    
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="mobile-frame">
+        <header class="app-header">
+            <div class="user-profile">
+                <div class="avatar"><i class="ph ph-user"></i></div>
+                <div class="user-info">
+                    <span class="greeting">Halo, Kasir</span>
+                    <span class="status-dot online">Online</span>
                 </div>
             </div>
-            <button class="btn-icon"><i class="ri-notification-3-line"></i></button>
+            <button class="settings-btn"><i class="ph ph-gear"></i></button>
         </header>
 
-        <div class="balance-card">
-            <span class="label">Total Transaksi Saat Ini</span>
+        <section class="balance-card">
+            <span class="label">Total Tagihan</span>
             <h1 id="display-total">Rp 0</h1>
-            <div class="balance-actions">
-                <button class="action-btn active" onclick="switchTab('menu')">
-                    <div class="icon-circle"><i class="ri-store-2-fill"></i></div>
-                    <span>Menu</span>
+            <div class="action-row">
+                <button class="action-btn" onclick="clearCart()">
+                    <i class="ph ph-trash"></i> Reset
                 </button>
-                <button class="action-btn" onclick="switchTab('manual')">
-                    <div class="icon-circle"><i class="ri-calculator-fill"></i></div>
-                    <span>Manual</span>
-                </button>
-                <button class="action-btn" onclick="switchTab('cart')">
-                    <div class="icon-circle"><i class="ri-shopping-bag-3-fill"></i></div>
-                    <span>Cart <span id="cart-badge">0</span></span>
+                <button class="action-btn primary" onclick="openPaymentModal()">
+                    <i class="ph ph-arrow-right"></i> Bayar
                 </button>
             </div>
+        </section>
+
+        <div class="segment-control">
+            <button class="segment active" onclick="switchTab('menu')">Menu</button>
+            <button class="segment" onclick="switchTab('manual')">Manual</button>
         </div>
 
-        <div class="graph-section">
-            <div class="graph-header">
-                <h3>Traffic Penjualan</h3>
-                <span class="live-indicator">● Live</span>
+        <div id="tab-menu" class="content-view active">
+            <div class="section-title">
+                <h3>Daftar Menu</h3>
+                <span class="badge" id="cart-count">0 Item</span>
             </div>
-            <div class="chart-container">
-                <canvas id="salesChart"></canvas>
-            </div>
+            <div id="menu-container" class="menu-list">
+                </div>
         </div>
 
-        <div class="content-area">
-            
-            <div id="tab-menu" class="tab-view">
-                <div class="section-title">
-                    <h3>Daftar Produk</h3>
-                    <a href="#">Lihat Semua</a>
-                </div>
-                <div class="menu-grid" id="menu-container">
-                    </div>
+        <div id="tab-manual" class="content-view hidden">
+            <div class="manual-display">
+                <span class="currency">Rp</span>
+                <span id="manual-input-view">0</span>
             </div>
-
-            <div id="tab-manual" class="tab-view hidden">
-                <div class="manual-display" id="manual-input-view">Rp 0</div>
-                <div class="numpad-grid">
-                    <button onclick="pressKey('7')">7</button><button onclick="pressKey('8')">8</button><button onclick="pressKey('9')">9</button>
-                    <button onclick="pressKey('4')">4</button><button onclick="pressKey('5')">5</button><button onclick="pressKey('6')">6</button>
-                    <button onclick="pressKey('1')">1</button><button onclick="pressKey('2')">2</button><button onclick="pressKey('3')">3</button>
-                    <button onclick="pressKey('000')">000</button><button onclick="pressKey('0')">0</button><button class="btn-del" onclick="pressKey('C')">C</button>
-                </div>
-                <button class="btn-add-manual" onclick="addManualItem()">+ Tambah Item</button>
+            <div class="numpad-grid">
+                <button onclick="pressKey('1')">1</button>
+                <button onclick="pressKey('2')">2</button>
+                <button onclick="pressKey('3')">3</button>
+                <button onclick="pressKey('4')">4</button>
+                <button onclick="pressKey('5')">5</button>
+                <button onclick="pressKey('6')">6</button>
+                <button onclick="pressKey('7')">7</button>
+                <button onclick="pressKey('8')">8</button>
+                <button onclick="pressKey('9')">9</button>
+                <button onclick="pressKey('.')">.</button>
+                <button onclick="pressKey('0')">0</button>
+                <button onclick="pressKey('C')" class="btn-del"><i class="ph ph-backspace"></i></button>
             </div>
-
-            <div id="tab-cart" class="tab-view hidden">
-                <div class="section-title">
-                    <h3>Keranjang Belanja</h3>
-                    <button onclick="clearCart()" class="text-danger">Hapus Semua</button>
-                </div>
-                <div id="cart-items" class="cart-list">
-                    <div class="empty-state">
-                        <i class="ri-shopping-cart-line"></i>
-                        <p>Keranjang kosong</p>
-                    </div>
-                </div>
-            </div>
+            <button class="btn-add-manual" onclick="addManualItem()">+ Tambah ke Order</button>
         </div>
 
-        <div class="bottom-floater">
-            <button class="btn-checkout" onclick="openModal()">
-                <span>Bayar Sekarang</span>
-                <i class="ri-arrow-right-line"></i>
-            </button>
+        <div class="cart-preview">
+            <div class="cart-header">
+                <span>Rincian Order</span>
+                <button onclick="toggleCartDetails()" class="toggle-cart"><i class="ph ph-caret-up"></i></button>
+            </div>
+            <div id="cart-items" class="cart-items-container">
+                <p class="empty-state">Belum ada item</p>
+            </div>
         </div>
     </div>
 
     <div id="payment-modal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
+                <button class="close-btn" onclick="closeModal()"><i class="ph ph-x"></i></button>
                 <h3>Pembayaran</h3>
-                <button onclick="closeModal()"><i class="ri-close-line"></i></button>
+                <div style="width: 24px;"></div>
             </div>
             
-            <div class="bill-amount">
-                <span>Total Tagihan</span>
+            <div class="payment-amount">
+                <p>Total Bayar</p>
                 <h2 id="modal-total-tagihan">Rp 0</h2>
             </div>
 
             <div class="input-group">
                 <label>Uang Diterima</label>
-                <input type="number" id="input-uang" placeholder="0">
+                <input type="number" id="input-uang" placeholder="0" inputmode="numeric">
             </div>
 
-            <div class="quick-cash-row">
-                <button onclick="setUang('pas')">Pas</button>
+            <div class="quick-cash-grid">
+                <button onclick="setUang('pas')">Uang Pas</button>
                 <button onclick="setUang(10000)">10k</button>
                 <button onclick="setUang(20000)">20k</button>
                 <button onclick="setUang(50000)">50k</button>
@@ -122,12 +115,10 @@
 
             <div class="change-info">
                 <span>Kembalian</span>
-                <strong id="text-kembalian">Rp 0</strong>
+                <span id="text-kembalian">Rp 0</span>
             </div>
 
-            <button class="btn-process" onclick="prosesTransaksi()">
-                <i class="ri-secure-payment-line"></i> PROSES
-            </button>
+            <button class="btn-process" onclick="prosesTransaksi()">Selesai & Cetak</button>
         </div>
     </div>
 
