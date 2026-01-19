@@ -1,117 +1,74 @@
 let cart = [];
 let manualBuffer = "0";
-let salesChart;
 const API_URL = "/api";
 
-// --- 1. Init & Chart Logic ---
-document.addEventListener('DOMContentLoaded', () => {
-    initChart();
-    fetchMenu();
-    // Simulate updating chart every 3 seconds for "Realtime" effect
-    setInterval(updateChartRandomly, 3000);
-});
-
-async function initChart() {
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    
-    // Gradient styling for the chart
-    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-    const initialData = await fetch(`${API_URL}/chart-data`).then(r => r.json());
-
-    salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: initialData.labels,
-            datasets: [{
-                label: 'Sales',
-                data: initialData.data,
-                borderColor: '#caffbf', // Mint color matching accent
-                backgroundColor: gradient,
-                borderWidth: 2,
-                pointBackgroundColor: '#fff',
-                pointRadius: 3,
-                tension: 0.4, // Smooth curves
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { display: false }, // Minimalist look
-                y: { display: false }
-            }
-        }
-    });
+// Fetch menu on load
+async function initMenu() {
+    try {
+        const res = await fetch(`${API_URL}/menu`);
+        const menuItems = await res.json();
+        const container = document.getElementById('menu-container');
+        container.innerHTML = '';
+        
+        menuItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'menu-item';
+            div.onclick = () => addToCart(item);
+            div.innerHTML = `
+                <div class="item-left">
+                    <div class="item-emoji">${item.emoji || '🍽️'}</div>
+                    <div class="item-info">
+                        <h4>${item.name}</h4>
+                        <p>Rp ${item.price.toLocaleString('id-ID')}</p>
+                    </div>
+                </div>
+                <button class="add-btn"><i class="ph ph-plus"></i></button>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) {
+        console.error("Gagal load menu", e);
+    }
 }
 
-function updateChartRandomly() {
-    if(!salesChart) return;
-    // Remove first, add new random point
-    const newData = Math.floor(Math.random() * 150000) + 50000;
-    salesChart.data.datasets[0].data.shift();
-    salesChart.data.datasets[0].data.push(newData);
-    salesChart.update();
-}
-
-// --- 2. Menu Logic ---
-async function fetchMenu() {
-    const res = await fetch(`${API_URL}/menu`);
-    const data = await res.json();
-    const container = document.getElementById('menu-container');
-    
-    container.innerHTML = data.map(item => `
-        <div class="menu-item" onclick="addToCart('${item.name}', ${item.price})">
-            <h4>${item.name}</h4>
-            <div class="price">Rp ${item.price.toLocaleString('id-ID')}</div>
-        </div>
-    `).join('');
-}
-
-// --- 3. Cart Logic ---
-function addToCart(name, price) {
-    const existing = cart.find(i => i.name === name);
+function addToCart(item) {
+    const existing = cart.find(i => i.name === item.name && i.price === item.price);
     if (existing) {
         existing.qty++;
     } else {
-        cart.push({ name, price, qty: 1 });
+        cart.push({ ...item, qty: 1 }); // clone item
     }
     renderCart();
 }
 
 function renderCart() {
-    const list = document.getElementById('cart-items');
-    const badge = document.getElementById('cart-badge');
-    const displayTotal = document.getElementById('display-total');
+    const totalDisplay = document.getElementById('display-total');
+    const container = document.getElementById('cart-items');
+    const badge = document.getElementById('cart-count');
     
-    // Update Badge
-    const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
-    badge.innerText = totalItems;
-
-    // Calc Total
-    let total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-    displayTotal.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+    let total = 0;
+    let itemCount = 0;
 
     if (cart.length === 0) {
-        list.innerHTML = `<div class="empty-state" style="text-align:center; padding:20px; color:#555;"><p>Keranjang Kosong</p></div>`;
-        return;
+        container.innerHTML = '<p class="empty-state">Belum ada item</p>';
+    } else {
+        container.innerHTML = cart.map((item, idx) => {
+            total += (item.price * item.qty);
+            itemCount += item.qty;
+            return `
+                <div class="cart-row">
+                    <span>${item.qty}x ${item.name}</span>
+                    <span>
+                        Rp ${(item.price * item.qty).toLocaleString('id-ID')}
+                        <button onclick="removeItem(${idx})"><i class="ph ph-trash"></i></button>
+                    </span>
+                </div>
+            `;
+        }).join('');
     }
 
-    list.innerHTML = cart.map((item, idx) => `
-        <div class="cart-item-card">
-            <div class="cart-item-info">
-                <div class="cart-item-name">${item.name} <span style="color:#4ade80; font-size:12px">x${item.qty}</span></div>
-                <div class="cart-item-price">Total: Rp ${(item.price * item.qty).toLocaleString('id-ID')}</div>
-            </div>
-            <button class="btn-remove" onclick="removeItem(${idx})">
-                <i class="ri-delete-bin-line"></i>
-            </button>
-        </div>
-    `).join('');
+    totalDisplay.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+    badge.innerText = `${itemCount} Item`;
 }
 
 function removeItem(idx) {
@@ -120,51 +77,67 @@ function removeItem(idx) {
 }
 
 function clearCart() {
-    cart = [];
-    renderCart();
+    if(confirm("Hapus semua item?")) {
+        cart = [];
+        renderCart();
+    }
 }
 
-// --- 4. Manual Input Logic ---
+// Manual Input Logic
 function pressKey(key) {
-    if (key === 'C') manualBuffer = "0";
-    else {
-        if (manualBuffer === "0") manualBuffer = key;
+    if (key === 'C') {
+        manualBuffer = manualBuffer.slice(0, -1);
+        if (manualBuffer === "") manualBuffer = "0";
+    } else {
+        if (manualBuffer === "0" && key !== '.') manualBuffer = key;
         else manualBuffer += key;
     }
-    document.getElementById('manual-input-view').innerText = `Rp ${parseInt(manualBuffer).toLocaleString('id-ID')}`;
+    document.getElementById('manual-input-view').innerText = parseInt(manualBuffer).toLocaleString('id-ID');
 }
 
 function addManualItem() {
-    const val = parseInt(manualBuffer);
+    const val = parseInt(manualBuffer.replace(/\./g, ''));
     if (val > 0) {
-        addToCart("Manual Item", val);
+        addToCart({ name: "Manual Item", price: val, emoji: "⌨️" });
         manualBuffer = "0";
-        document.getElementById('manual-input-view').innerText = "Rp 0";
-        switchTab('cart'); // Auto jump to cart
+        document.getElementById('manual-input-view').innerText = "0";
+        switchTab('menu'); // Balik ke menu view agar user lihat item masuk
+        alert("Item manual ditambahkan!");
     }
 }
 
-// --- 5. Navigation ---
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
-    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+// UI Tabs
+function switchTab(tab) {
+    document.querySelectorAll('.content-view').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.segment').forEach(el => el.classList.remove('active'));
     
-    // Update visual styles (Optional: add 'active' class to buttons)
+    document.getElementById(`tab-${tab}`).classList.remove('hidden');
+    // Simple way to find button based on onclick text, or just use indices
+    const btns = document.querySelectorAll('.segment');
+    if(tab === 'menu') btns[0].classList.add('active');
+    else btns[1].classList.add('active');
 }
 
-// --- 6. Payment Logic ---
-function openModal() {
+function toggleCartDetails() {
+    // Logic untuk expand cart bisa ditambahkan di CSS class
+    const cartEl = document.querySelector('.cart-preview');
+    if(cartEl.style.maxHeight === '80%') cartEl.style.maxHeight = '40%';
+    else cartEl.style.maxHeight = '80%';
+}
+
+// Payment Modal
+function openPaymentModal() {
     const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    if (total === 0) return alert("Keranjang masih kosong!");
+    if (total === 0) return alert("Keranjang kosong!");
     
     document.getElementById('modal-total-tagihan').innerText = `Rp ${total.toLocaleString('id-ID')}`;
     document.getElementById('payment-modal').style.display = 'flex';
+    document.getElementById('input-uang').value = '';
+    document.getElementById('text-kembalian').innerText = 'Rp 0';
 }
 
 function closeModal() {
     document.getElementById('payment-modal').style.display = 'none';
-    document.getElementById('input-uang').value = '';
-    document.getElementById('text-kembalian').innerText = 'Rp 0';
 }
 
 function setUang(val) {
@@ -195,18 +168,17 @@ async function prosesTransaksi() {
             body: JSON.stringify({ items: cart, paid })
         });
         
-        if (!res.ok) throw new Error("Gagal");
+        if(!res.ok) throw new Error("Gagal");
         
         const data = await res.json();
         alert(`SUKSES!\nKembalian: Rp ${data.change.toLocaleString('id-ID')}`);
-        
         cart = [];
         renderCart();
         closeModal();
-        switchTab('menu'); // Reset view
     } catch (e) {
-        alert("Gagal memproses transaksi");
+        alert("Terjadi kesalahan koneksi");
     }
 }
 
 document.getElementById('input-uang').addEventListener('input', calculateChange);
+initMenu();
